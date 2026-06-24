@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expenses - EBS Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #1e3a5f;
+            --danger: #dc3545;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: var(--primary);
+            color: white;
+            padding-top: 1rem;
+            z-index: 1000;
+        }
+
+        .sidebar-brand {
+            padding: 1rem 1.5rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 0.9rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: #0dcaf0;
+        }
+
+        .sidebar-menu i {
+            width: 25px;
+            margin-right: 0.5rem;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-footer a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
+        }
+
+        .top-navbar {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .table th {
+            font-weight: 600;
+            color: #6c757d;
+            border-top: none;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            padding: 0.5rem 1.5rem;
+        }
+
+        .btn-add:hover {
+            background: #152a45;
+            color: white;
+        }
+
+        .btn-edit {
+            color: #0d6efd;
+            border: none;
+            background: none;
+        }
+
+        .btn-delete {
+            color: var(--danger);
+            border: none;
+            background: none;
+        }
+
+        .total-badge {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <i class="bi bi-wallet2"></i> EBS Tracker
+    </div>
+    <ul class="sidebar-menu">
+        <li><a href="/dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li><a href="/expenses" class="active"><i class="bi bi-credit-card"></i> Expenses</a></li>
+        <li><a href="/income"><i class="bi bi-cash-stack"></i> Income</a></li>
+        <li><a href="/savings"><i class="bi bi-piggy-bank"></i> Savings</a></li>
+        <li><a href="/profile"><i class="bi bi-person"></i> Profile</a></li>
+    </ul>
+    <div class="sidebar-footer">
+        <a href="/logout"><i class="bi bi-box-arrow-left"></i> Logout</a>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+    <!-- Top Navbar -->
+    <div class="top-navbar">
+        <h5 class="mb-0 fw-bold">Expenses</h5>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted">Welcome, <span th:text="${userName}">User</span></span>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <a href="/expenses/add" class="btn btn-add">
+            <i class="bi bi-plus-lg me-2"></i>Add Expense
+        </a>
+        <div class="total-badge">
+            Total Expenses (This Month):
+            <span th:text="'₹' + ${#numbers.formatDecimal(totalExpenses, 0, 'COMMA', 0, 'POINT')}">₹0</span>
+        </div>
+    </div>
+
+    <!-- Expenses Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="exp : ${expenses}">
+                    <td th:text="${exp.expenseDate}">Date</td>
+                    <td>
+                        <span class="badge bg-secondary" th:text="${exp.category}">Category</span>
+                    </td>
+                    <td th:text="${exp.description}">Description</td>
+                    <td class="fw-bold text-danger"
+                        th:text="'₹' + ${#numbers.formatDecimal(exp.amount, 0, 'COMMA', 0, 'POINT')}">₹0</td>
+                    <td>
+                        <a th:href="@{/expenses/edit/{id}(id=${exp.id})}" class="btn-edit me-2">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <a th:href="@{/expenses/delete/{id}(id=${exp.id})}"
+                           class="btn-delete"
+                           onclick="return confirm('Are you sure you want to delete this expense?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(expenses)}">
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <p class="mt-2">No expenses found. Add your first expense!</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
